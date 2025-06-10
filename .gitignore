@@ -1,0 +1,11 @@
+datasets
+runs
+yolo11n.pt
+deep-text-recognition-benchmark
+car_datasets
+plate_datasets
+result_data*
+plate_train
+car_train
+test_dataset.zip
+exp10-new

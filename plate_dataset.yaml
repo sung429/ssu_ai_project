@@ -1,0 +1,6 @@
+train: plate_datasets/train/images
+val: plate_datasets/valid/images
+test: plate_datasets/test/images
+
+nc: 1
+names: ['plate']

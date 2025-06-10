@@ -14,6 +14,8 @@ target_label_path = '/media2/dataset/103.자동차_차종-연식-번호판_인�
 # 필요한 디렉터리 생성
 os.makedirs(f"{target_label_path}/raw/images", exist_ok=True)
 os.makedirs(f"{target_label_path}/raw/labels", exist_ok=True)
+os.makedirs(f"{target_label_path}/plate/raw/images", exist_ok=True)
+os.makedirs(f"{target_label_path}/plate/raw/labels", exist_ok=True)
 
 label_list = glob.glob(label_path+'*/*/*.json')
 
@@ -53,12 +55,25 @@ def process_label(label_file):
         if 'plate' not in json_file.keys():
             return {'status': 'error', 'file': label_file, 'reason': 'no plate info'}
             
+        car_bbox = json_file['car']['bbox']
         plate_bbox = json_file['plate']['bbox']
+        resized_plate_bbox = []
+        # print("car_bbox")
+        # print(car_bbox)
+        # print("plate_bbox")
+        # print(plate_bbox)
+        # print(plate_bbox[0] - car_bbox[0])
+        # print(plate_bbox[1] - car_bbox[0])
+        for plate in plate_bbox:
+            resized_plate_bbox.append([plate[0] - car_bbox[0][0], plate[1] - car_bbox[0][1]])
+        # plate_bbox = resized_plate_bbox
+        # resized_plate_bbox = [[plate[0] - car[0], plate[1] - car[0]] for car, plate in zip(car_bbox, plate_bbox)]
         
         # 한글 경로 문제 때문에 cv2.imread 사용 불가
         try:
             img_array = np.fromfile(image_file, np.uint8)
             image = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+            car_image = image.copy()[int(car_bbox[0][1]):int(car_bbox[1][1]), int(car_bbox[0][0]):int(car_bbox[1][0])]
             if image is None:
                 raise Exception("이미지 디코딩 실패")
         except Exception as e:
@@ -66,12 +81,14 @@ def process_label(label_file):
         
         # YOLO 좌표 변환
         try:
-            xc, yc, width, height = xyxy_to_xywh(plate_bbox, image)
+            xc, yc, width, height = xyxy_to_xywh(car_bbox, image)
+            label_xc, label_yc, label_width, label_height = xyxy_to_xywh(resized_plate_bbox, car_image)
         except Exception as e:
             return {'status': 'error', 'file': label_file, 'reason': f'coordinate conversion failed: {str(e)}'}
         
         # 레이블 파일 작성
         label_file_path = f"{target_label_path}/raw/labels/{image_file.split('/')[-1].split('.')[0]}.txt"
+        plate_label_file_path = f"{target_label_path}/plate/raw/labels/{image_file.split('/')[-1].split('.')[0]}.txt"
         try:
             if not os.path.exists(label_file_path):
                 with open(label_file_path, 'w') as lf:
@@ -79,9 +96,18 @@ def process_label(label_file):
             else:
                 with open(label_file_path, 'a') as lf:
                     lf.write(f'0 {xc} {yc} {width} {height}\n')
+
+            if not os.path.exists(plate_label_file_path):
+                with open(plate_label_file_path, 'w') as lf:
+                    lf.write(f'0 {label_xc} {label_yc} {label_width} {label_height}\n')
+            else:
+                with open(plate_label_file_path, 'a') as lf:
+                    lf.write(f'0 {label_xc} {label_yc} {label_width} {label_height}\n')
                     
             # 이미지 파일 복사
             shutil.copy(image_file, f"{target_label_path}/raw/images/{image_file.split('/')[-1]}")
+            cv2.imwrite(f"{target_label_path}/plate/raw/images/{image_file.split('/')[-1]}", car_image)
+            # shutil.copy(image_file, f"{target_label_path}/plate/raw/images/{image_file.split('/')[-1]}")
             
             return {'status': 'success', 'file': label_file}
             

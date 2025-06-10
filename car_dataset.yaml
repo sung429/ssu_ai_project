@@ -1,0 +1,6 @@
+train: car_datasets/train/images
+val: car_datasets/valid/images
+test: car_datasets/test/images
+
+nc: 1
+names: ['car']
