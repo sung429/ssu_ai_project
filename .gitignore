@@ -9,3 +9,4 @@ plate_train
 car_train
 test_dataset.zip
 exp10-new
+trainer/all_data

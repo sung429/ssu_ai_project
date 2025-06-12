@@ -6,8 +6,8 @@ model.train(
     data="plate_dataset.yaml", 
     device=[0,1,2,3], 
     epochs=50, 
-    batch=512,
-    imgsz=320,
+    batch=256,
+    imgsz=640,
     project='plate_train',
     multi_scale=True, 
     amp=True)
