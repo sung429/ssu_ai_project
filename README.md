@@ -2,7 +2,7 @@
 >2025 1학기 AI 프로그래밍 조별 과제
 
 ## 모델 이동
->.EasyOCR 디렉토리를 User의 홈 디렉토리에 복사
+>.EasyOCR 디렉토리를 User의 홈 디렉토리에 복사  
 > mv -r .EasyOCR ~/.EasyOCR
 
 ## 실행 파일
